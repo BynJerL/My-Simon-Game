@@ -11,8 +11,12 @@ class _SimonGameState extends State<SimonGame> {
   var myScore = 0;
   bool isActive = false;
   bool isFail = false;
-  var sequenceList = List.filled(10, 0);
+  bool isVictory = false;
+  int maxRound = 10;
+  late var sequenceList = List.filled(maxRound, 0);
   int currentRound = 1;
+  int currentSequence = 0;
+  late String roundDisplay;
 
   @override
   void initState() {
@@ -23,11 +27,39 @@ class _SimonGameState extends State<SimonGame> {
       sequenceList[i] = Random().nextInt(4);
     }
 
+    DisplaySequence(currentRound);
   }
 
   // Display Sequence
-  String DisplaySequence(int round) {
-    return "${sequenceList.getRange(0, round)}";
+  void DisplaySequence(int round) {
+    setState(() {
+      roundDisplay = "${sequenceList.getRange(0, round)}";
+    });
+    print(roundDisplay);
+  }
+
+  // Check
+  void CheckSequence(int playerInput){
+    if (isVictory == false) {
+      setState(() {
+        if (playerInput == sequenceList[currentSequence]) {
+          if (currentSequence == (currentRound - 1)) {
+            myScore++;
+            if (currentRound == sequenceList.length) {
+              isVictory = true;
+            } else {
+              currentRound++; 
+              DisplaySequence(currentRound);
+              currentSequence = 0;
+            }
+          } else {
+            currentSequence++;
+          }
+        } else {
+          isFail = true;
+        }
+      });
+    }
   }
 
   void Toggle(){
@@ -50,7 +82,7 @@ class _SimonGameState extends State<SimonGame> {
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Text(
-                  "Round $currentRound: ${DisplaySequence(currentRound)}",
+                  "Round $currentRound: $roundDisplay",
                   style: TextStyle(
                     fontSize: 20
                   ),
@@ -59,7 +91,7 @@ class _SimonGameState extends State<SimonGame> {
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Text(
-                  "Score: $myScore",
+                  (isFail == false) ? (isVictory == true) ? "You Win" : "Score: $myScore" : "Game Over",
                   style: TextStyle(
                     fontSize: 20
                   ),
@@ -72,7 +104,7 @@ class _SimonGameState extends State<SimonGame> {
                       padding: MaterialStatePropertyAll(EdgeInsets.zero),
                       shape: MaterialStateProperty.all(CircleBorder())
                     ),
-                    onPressed: (){}, 
+                    onPressed: (){CheckSequence(1);}, 
                     child: Icon(
                       Icons.arrow_drop_up,
                       size: 40,
@@ -88,7 +120,7 @@ class _SimonGameState extends State<SimonGame> {
                       padding: MaterialStatePropertyAll(EdgeInsets.zero),
                       shape: MaterialStateProperty.all(CircleBorder())
                     ),
-                    onPressed: (){}, 
+                    onPressed: (){CheckSequence(0);}, 
                     child: Icon(
                       Icons.arrow_left,
                       size: 40,
@@ -105,7 +137,7 @@ class _SimonGameState extends State<SimonGame> {
                       padding: MaterialStatePropertyAll(EdgeInsets.zero),
                       shape: MaterialStateProperty.all(CircleBorder())
                     ),
-                    onPressed: (){}, 
+                    onPressed: (){CheckSequence(2);}, 
                     child: Icon(
                       Icons.arrow_right,
                       size: 40,
@@ -120,7 +152,7 @@ class _SimonGameState extends State<SimonGame> {
                       padding: MaterialStatePropertyAll(EdgeInsets.zero),
                       shape: MaterialStateProperty.all(CircleBorder())
                     ),
-                    onPressed: (){}, 
+                    onPressed: (){CheckSequence(3);}, 
                     child: Icon(
                       Icons.arrow_drop_down,
                       size: 40,
