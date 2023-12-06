@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class SimonGame extends StatefulWidget {
@@ -10,6 +12,23 @@ class _SimonGameState extends State<SimonGame> {
   bool isActive = false;
   bool isFail = false;
   var sequenceList = List.filled(10, 0);
+  int currentRound = 1;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Generate Sequence
+    for (int i = 0; i < sequenceList.length; i++){
+      sequenceList[i] = Random().nextInt(4);
+    }
+
+  }
+
+  // Display Sequence
+  String DisplaySequence(int round) {
+    return "${sequenceList.getRange(0, round)}";
+  }
 
   void Toggle(){
     setState(() {
@@ -28,6 +47,15 @@ class _SimonGameState extends State<SimonGame> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Text(
+                  "Round $currentRound: ${DisplaySequence(currentRound)}",
+                  style: TextStyle(
+                    fontSize: 20
+                  ),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Text(
