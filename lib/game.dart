@@ -12,19 +12,25 @@ class _SimonGameState extends State<SimonGame> {
   bool isActive = false;
   bool isFail = false;
   bool isVictory = false;
-  int maxRound = 10;
+  int maxRound = 100;
   late var sequenceList = List.filled(maxRound, 0);
   int currentRound = 1;
   int currentSequence = 0;
   late String roundDisplay;
+  int totalRow = 2;
+  int totalColumn = 2;
+  late int totalButton;
 
   @override
   void initState() {
     super.initState();
 
+    // Initialize the number of button used
+    totalButton = totalRow * totalColumn;
+
     // Generate Sequence
     for (int i = 0; i < sequenceList.length; i++){
-      sequenceList[i] = Random().nextInt(4);
+      sequenceList[i] = Random().nextInt(totalButton);
     }
 
     DisplaySequence(currentRound);
@@ -40,7 +46,7 @@ class _SimonGameState extends State<SimonGame> {
 
   // Check
   void CheckSequence(int playerInput){
-    if (isVictory == false) {
+    if (isVictory == false && isFail == false) {
       setState(() {
         if (playerInput == sequenceList[currentSequence]) {
           if (currentSequence == (currentRound - 1)) {
@@ -97,67 +103,22 @@ class _SimonGameState extends State<SimonGame> {
                   ),
                 ),
               ),
-              ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Colors.yellow),
-                      fixedSize: MaterialStatePropertyAll(Size(50, 50)),
-                      padding: MaterialStatePropertyAll(EdgeInsets.zero),
-                      shape: MaterialStateProperty.all(CircleBorder())
-                    ),
-                    onPressed: (){CheckSequence(1);}, 
-                    child: Icon(
-                      Icons.arrow_drop_up,
-                      size: 40,
-                    )
-                  ),
-              Row(
+              
+              for(int i = 0; i < totalRow; i++)Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
+                children : [for(int j = 0; j < totalColumn; j++)Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Colors.red),
-                      fixedSize: MaterialStatePropertyAll(Size(50, 50)),
-                      padding: MaterialStatePropertyAll(EdgeInsets.zero),
-                      shape: MaterialStateProperty.all(CircleBorder())
+                      backgroundColor: MaterialStatePropertyAll(Colors.cyan),
+                      fixedSize: MaterialStatePropertyAll(Size(100, 100))
                     ),
-                    onPressed: (){CheckSequence(0);}, 
-                    child: Icon(
-                      Icons.arrow_left,
-                      size: 40,
-                    )
-                  ),
-                  SizedBox(
-                    width: 60,
-                    height: 60,
-                  ),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Colors.green),
-                      fixedSize: MaterialStatePropertyAll(Size(50, 50)),
-                      padding: MaterialStatePropertyAll(EdgeInsets.zero),
-                      shape: MaterialStateProperty.all(CircleBorder())
+                    onPressed: (){CheckSequence(i*totalColumn+j);}, 
+                    child: Text("${i*totalColumn+j}")
                     ),
-                    onPressed: (){CheckSequence(2);}, 
-                    child: Icon(
-                      Icons.arrow_right,
-                      size: 40,
-                    )
-                  )
-                ],
+                ),
+                ]
               ),
-              ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Colors.blueAccent),
-                      fixedSize: MaterialStatePropertyAll(Size(50, 50)),
-                      padding: MaterialStatePropertyAll(EdgeInsets.zero),
-                      shape: MaterialStateProperty.all(CircleBorder())
-                    ),
-                    onPressed: (){CheckSequence(3);}, 
-                    child: Icon(
-                      Icons.arrow_drop_down,
-                      size: 40,
-                    )
-                  ),
             ],
           ),
         )
