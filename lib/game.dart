@@ -1,8 +1,14 @@
 import 'dart:math';
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class SimonGame extends StatefulWidget {
+  int inputCol;
+  int inputRow;
+  SimonGame(this.inputCol, this.inputRow, {super.key});
+
   @override
   State<SimonGame> createState() => _SimonGameState();
 }
@@ -19,30 +25,77 @@ class _SimonGameState extends State<SimonGame> with TickerProviderStateMixin{
   int currentRound = 1;
   int currentSequence = 0;
   String roundDisplay = "Ready?!";
-  int totalRow = 3;
-  int totalColumn = 3;
+  late int totalRow;
+  late int totalColumn;
   int sequenceDelay = 1000;
   late double buttonSize;
   late int totalButton;
   var displayColor, aniControllers, aniColors;
+  final buttonPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
 
     // Initialize the number of button used
+    totalRow = widget.inputRow;
+    totalColumn = widget.inputCol;
     totalButton = totalRow * totalColumn;
-    buttonSize = (2/totalColumn) * 120;
+    buttonSize = (2/totalColumn) * 110;
     displayColor = List.filled(totalButton, Colors.blueGrey);
     aniControllers = List.generate(totalButton, (index) => AnimationController(duration: Duration(milliseconds: 400), reverseDuration: Duration(milliseconds: 400),vsync: this));
     aniColors = List.generate(totalButton, (index) => ColorTween(begin: Colors.blueGrey, end: Colors.cyan).animate(aniControllers[index]));
 
     // Generate Sequence
-    for (int i = 0; i < sequenceList.length; i++){
-      sequenceList[i] = Random().nextInt(totalButton);
-    }
+    // for (int i = 0; i < sequenceList.length; i++){
+    //   sequenceList[i] = Random().nextInt(totalButton);
+    // }
+    GenerateSequence();
 
     // DisplaySequence(currentRound);
+  }
+
+  // Generate Sequence
+  void GenerateSequence(){
+    setState(() {
+      for (int i = 0; i < sequenceList.length; i++){
+        sequenceList[i] = Random().nextInt(totalButton);
+      }
+    });
+  }
+
+  void Restart(){
+    setState(() {
+      isFail = false;
+      isVictory = false;
+      isDisplaying = false;
+      currentRound = 1;
+      currentSequence = 0;
+      myScore = 0;
+    });
+    GenerateSequence();
+    DisplaySequence(currentRound);
+  }
+
+  // void Stop(){
+  //   setState(() {
+  //     isFail = false;
+  //     isVictory = false;
+  //     isDisplaying = false;
+  //     currentRound = 1;
+  //     currentSequence = 0;
+  //     myScore = 0;
+  //   });
+  //   GenerateSequence();
+  //   updateStartStatus();
+  // }
+
+  // Add Button Sound
+  void buttonSound(int value){
+    int currRow = (value/totalColumn).ceil();
+    int currColumn = (value - 1)%totalColumn + 1;
+    buttonPlayer.stop();
+    buttonPlayer.play(AssetSource('sound/button_r${currRow}c${currColumn}.wav'));
   }
 
   // Display Sequence
@@ -54,8 +107,12 @@ class _SimonGameState extends State<SimonGame> with TickerProviderStateMixin{
 
     await Future.delayed(Duration(seconds: 1));
     for(int i = 0; i < round; i++){
-      await ShowSequence(sequenceList[i]);
-      print(sequenceList[i]);
+      if (isDisplaying == true) {
+        await ShowSequence(sequenceList[i]);
+        print(sequenceList[i]);
+      } else {
+        break;
+      }
     }
 
     setState(() {
@@ -78,6 +135,7 @@ class _SimonGameState extends State<SimonGame> with TickerProviderStateMixin{
   
   Future<void> ShowSequence(int value) async {
     await Future.delayed(Duration(milliseconds: 200));
+    buttonSound(value + 1);
     setState(() {
       displayColor[value] = Colors.cyan;
       // print("Change Color to Cyan");
@@ -103,6 +161,13 @@ class _SimonGameState extends State<SimonGame> with TickerProviderStateMixin{
               DisplaySequence(currentRound);
               currentSequence = 0;
             }
+            if (currentRound > 8) {
+              if (currentRound > 20) {
+                sequenceDelay = 500;
+              } else {
+                sequenceDelay = 750;
+              }  
+            } 
           } else {
             currentSequence++;
           }
@@ -140,25 +205,41 @@ class _SimonGameState extends State<SimonGame> with TickerProviderStateMixin{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("${totalColumn}x${totalRow} Simon Game"),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
+              // Padding(
+              //   padding: const EdgeInsets.all(24.0),
+              //   child: Text(
+              //     "Round $currentRound: $roundDisplay",
+              //     style: TextStyle(
+              //       fontSize: 20
+              //     ),
+              //   ),
+              // ),
               Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.only(top: 20),
                 child: Text(
-                  "Round $currentRound: $roundDisplay",
-                  style: TextStyle(
-                    fontSize: 20
+                  (isFail == false) ? (isVictory == true) ? "You Win" : "Score" : "Game Over",
+                  style: GoogleFonts.openSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    color: (isFail == true)? Colors.red: Colors.black
                   ),
                 ),
               ),
+
               Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
-                  (isFail == false) ? (isVictory == true) ? "You Win" : "Score: $myScore" : "Game Over",
-                  style: TextStyle(
-                    fontSize: 20
+                  "$myScore",
+                  style: GoogleFonts.openSans(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 80
                   ),
                 ),
               ),
@@ -189,11 +270,14 @@ class _SimonGameState extends State<SimonGame> with TickerProviderStateMixin{
                   padding: const EdgeInsets.all(5),
                   child: ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll((isStarted != true || isDisplaying == true)?Colors.grey:Colors.cyan),
+                      backgroundColor: MaterialStatePropertyAll((isStarted != true || isDisplaying == true)?Colors.grey:(isFail == true)? Colors.red:Colors.cyan),
                       fixedSize: MaterialStatePropertyAll(Size(buttonSize.roundToDouble(), buttonSize.roundToDouble()))
                     ),
-                    onPressed: (isStarted != true || isDisplaying == true)? null : (){CheckSequence(i*totalColumn+j);}, 
-                    child: Text("${i*totalColumn+j}")
+                    onPressed: (isStarted != true || isDisplaying == true || isFail == true)? null : (){
+                      buttonSound(i*totalColumn+j+1);
+                      CheckSequence(i*totalColumn+j);
+                    }, 
+                    child: Text("${i*totalColumn+j + 1}")
                     ),
                   ),
                 ]
@@ -201,24 +285,57 @@ class _SimonGameState extends State<SimonGame> with TickerProviderStateMixin{
 
               SizedBox(height: 20),
 
+            ],
+          ),
+        )
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 20, bottom: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
               ElevatedButton(
                 style: ButtonStyle(
-                  fixedSize: MaterialStatePropertyAll(Size(200,50)),
+                  fixedSize: MaterialStatePropertyAll(Size(75,75)),
+                  padding: MaterialStateProperty.all(EdgeInsets.zero)
                 ),
                 onPressed: (isStarted == true)? null: (){
                   updateStartStatus();
                   DisplaySequence(currentRound);
                 }, 
-                child: Text("Game Start",
-                  style: TextStyle(
-                    fontSize: 24
-                  ),
+                child: Icon(Icons.play_arrow,
+                  size: 60,
+                )
+              ),
+              SizedBox(width: 20),
+              ElevatedButton(
+                style: ButtonStyle(
+                  fixedSize: MaterialStatePropertyAll(Size(75,75)),
+                  padding: MaterialStateProperty.all(EdgeInsets.zero)
+                ),
+                onPressed: (isStarted == false)? null: Restart, 
+                child: Icon(Icons.restart_alt,
+                  size: 60,
+                )
+              ),
+              SizedBox(width: 20),
+              ElevatedButton(
+                style: ButtonStyle(
+                  fixedSize: MaterialStatePropertyAll(Size(75,75)),
+                  padding: MaterialStateProperty.all(EdgeInsets.zero)
+                ),
+                onPressed: (){
+                  Navigator.pop(context);
+                }, 
+                child: Icon(Icons.home,
+                  size: 60,
                 )
               )
             ],
           ),
-        )
-      )
+        ),
+      ),
     );
   }
 }

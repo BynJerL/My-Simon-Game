@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simon_game/game.dart';
+import 'package:simon_game/mainmenu.dart';
 
 void main() {
   runApp(const MainApp());
@@ -11,7 +12,8 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: SimonGame()
+      home: MainMenu(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
