@@ -32,7 +32,8 @@ class _MainMenuState extends State<MainMenu> {
           Padding(
             padding: const EdgeInsets.only(top: 80, bottom: 40),
             child: Text("Simon Game",
-              style: GoogleFonts.rubikGlitch(
+              style: GoogleFonts.playfairDisplay(
+                fontWeight: FontWeight.bold,
                 fontSize: 72,
               ),
               textAlign: TextAlign.center,
